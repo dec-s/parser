@@ -1,11 +1,28 @@
 /*
 программа для парсинга сайта с расписанием и подготовки даных для дальнейшего использования
 */
+#includes <stdio.h>
 #includes <fstream>
 #includes <string>
-void startCurl(string url){
+
+#define WINDOWS = 1
+
+#if WINDOWS == 1
+void startCurl(string url){ //запуск curl в виндовс
+		
+	FILE   *curl;
+	string request = "\curl-7.79.1\bin\curl.exe -o \..\..\site.html ";
+	request = recuest + url;
+    if( (curl = _popen( request, "wt" )) == NULL )
+      exit( 1 );
+}
+#endif
+
+#if WINDOWS == 0
+void startCurl(string url){ // код под Linux
 	
 }
+#endif
 
 int main(){
 	string url;
