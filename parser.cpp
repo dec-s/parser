@@ -1,36 +1,48 @@
 /*
 программа для парсинга сайта с расписанием и подготовки даных для дальнейшего использования
 */
-#include <stdio.h>
-#include <fstream>
-#include <string>
+#include <fstream> //библиотека работы с файами
+#include <string> //строковая библиотека
+#include <ctime> //библиотека времени
+#include <vector>
 using namespace std;
 
 #define WINDOWS 1
 
 #if WINDOWS == 1
-void startCurl(string url, string* raw_data){ //запуск curl в виндовс
-		
-	FILE   *curl;
+void startCurl(string url, vector<char>* raw_data) { //запуск curl в виндовс
+
+	long size = 0;
 	char buffer[128];
-	string request = R"(curl-7.79.1\bin\curl.exe )"; //..\..\curl-7.79.1\bin\curl.exe -o \..\..\site.html "C:\Users\User\Documents\parser_schedule\curl-7.79.1\bin\curl.exe;
+	bool freeday = 0;
+	time_t now = time(0);
+	char* dt = ctime(&now);//достаем время системы 
+	for (int i = 0; i <= 2; i++) { //болк проверки пустого дня
+		if ("Sat"[i] != dt[i]) freeday = 1;
+	}
+	if (!freeday) {
+		printf("on Saturday, no need to worry about studying on Sunday");
+#if DEBUG == 1 
+		system("pause");
+#endif
+		exit(1);
+	}//конец блока
+
+	FILE* curl;
+	string request = R"(curl-7.79.1\bin\curl.exe )";
 	request = request + url;
-	const char* c = request.c_str();
-    if( (curl = _popen(c, "rt" )) == NULL )
-      exit( 1 );
-	while (fgets(buffer, 128, curl))
-	{
-		puts(buffer);
+	const char* c = request.c_str();// подготовка символьной пременной для _popen
+	if ((curl = _popen(c, "rt")) == NULL) {
+		exit(1);
 	}
-	if (feof(curl))
+
+	while (fgets(buffer, 128, curl))//вывод данных в основной цикл программы в виде вектора символов
 	{
-		printf("\nProcess returned %d\n", _pclose(curl));
+		for (int i = 0; i < 128; i++) {
+		raw_data->push_back(buffer[i]);
+		}
 	}
-	else
-	{
-		printf("Error: Failed to read the pipe to the end.\n");
-	}
-	
+
 }
 #endif
 
@@ -42,12 +54,12 @@ void startCurl(string url){ // код под Linux
 
 int main(){
 	setlocale(LC_ALL, "rus"); // корректное отображение Кириллицы
-	string url, raw_data;
+	string url;
 	char chars;
+	vector<char> raw_data;
 	ifstream fd("destination_site.txt", ios::in);//открытие файла с сайтом парсинга;;
 	if (!fd.is_open()){
 		printf("ошибка открытия");
-		system("pause");
 		return 1;
 	}
 	else{
@@ -59,6 +71,8 @@ int main(){
 		
 	}
 	startCurl(url, &raw_data);
-	system("pause");
+
+	printf("end");
+	scanf(&chars);
 	return 0 ;
 }
