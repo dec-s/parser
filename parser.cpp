@@ -1,20 +1,36 @@
 /*
 программа для парсинга сайта с расписанием и подготовки даных для дальнейшего использования
 */
-#includes <stdio.h>
-#includes <fstream>
-#includes <string>
+#include <stdio.h>
+#include <fstream>
+#include <string>
+using namespace std;
 
-#define WINDOWS = 1
+#define WINDOWS 1
 
 #if WINDOWS == 1
-void startCurl(string url){ //запуск curl в виндовс
+void startCurl(string url, string* raw_data){ //запуск curl в виндовс
 		
 	FILE   *curl;
-	string request = "\curl-7.79.1\bin\curl.exe -o \..\..\site.html ";
-	request = recuest + url;
-    if( (curl = _popen( request, "wt" )) == NULL )
+	char buffer[128];
+	string request = R"(curl-7.79.1\bin\curl.exe )"; //..\..\curl-7.79.1\bin\curl.exe -o \..\..\site.html "C:\Users\User\Documents\parser_schedule\curl-7.79.1\bin\curl.exe;
+	request = request + url;
+	const char* c = request.c_str();
+    if( (curl = _popen(c, "rt" )) == NULL )
       exit( 1 );
+	while (fgets(buffer, 128, curl))
+	{
+		puts(buffer);
+	}
+	if (feof(curl))
+	{
+		printf("\nProcess returned %d\n", _pclose(curl));
+	}
+	else
+	{
+		printf("Error: Failed to read the pipe to the end.\n");
+	}
+	
 }
 #endif
 
@@ -25,17 +41,24 @@ void startCurl(string url){ // код под Linux
 #endif
 
 int main(){
-	string url;
-	ifstream fd;
-	fd.open("destination_site.txt",ios_base::in);//открытие файла с сайтом парсинга
-	if (fd == is_open){
-	url = scanf(&fd);
-	fd.close();	
+	setlocale(LC_ALL, "rus"); // корректное отображение Кириллицы
+	string url, raw_data;
+	char chars;
+	ifstream fd("destination_site.txt", ios::in);//открытие файла с сайтом парсинга;;
+	if (!fd.is_open()){
+		printf("ошибка открытия");
+		system("pause");
+		return 1;
 	}
 	else{
-	printf("ошибка открытия");
-	return 1;
+		
+		while (!fd.eof()) {  // прочитали его и заполнили им строку
+			fd.get(chars);
+			url.push_back(chars);
+		}
+		
 	}
-	raw_data = startCurl(url);
-	
+	startCurl(url, &raw_data);
+	system("pause");
+	return 0 ;
 }
