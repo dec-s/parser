@@ -36,7 +36,10 @@ void startCurl(string url, vector<char>* raw_data) { //запуск curl в ви
 	while (fgets(buffer, 128, curl))//вывод данных в основной цикл программы в виде вектора символов
 	{
 		for (int i = 0; i < 128; i++) {
-		raw_data->push_back(buffer[i]);
+			if ((int)buffer[i] > 10) {//исключение управляющих символов из общего потока( при текущей кодировке символы юникода так же исключаются, возможно будут правки)
+				raw_data->push_back(buffer[i]);
+
+			}
 		}
 	}
 
@@ -70,22 +73,20 @@ int main(){
 		}
 		
 	}
-	startCurl(url, &raw_data);
-	unsigned int size_vector = raw_data.size()-1;
-	unsigned int size_vector_find = size(find_string)-1;
+	startCurl(url, &raw_data);//вызов функции запроса
+	unsigned int size_vector_find = size(find_string)-1;//уменьшение размера вектора связано с наличием команды конца сторки в строке эталон
+	unsigned int size_vector = raw_data.size() - size_vector_find;// особого смысла не имеет но в крайнем случаи исключит ненужный поиск в конечных элементах
 	for (unsigned int i = 0; i < size_vector; i++) {//самодельный перебор элементов вектора со сравнением с эталоном
-		short int acceptable_error = 2;
 		for (unsigned int j = 0; j < size_vector_find; j++) {
 			if (raw_data[i + j] != find_string[j]) {
-				acceptable_error--;
-				if (!acceptable_error)break;				
+				break;				
 			}
 			if (j == (size_vector_find-1)) {
 				itterator = i;
 				flag = 1;
 				break;
 			}
-		}
+		}// конец поисковика
 
 		if (flag == 1)break;
 	}
