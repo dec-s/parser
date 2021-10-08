@@ -57,6 +57,7 @@ unsigned int  FindString(unsigned int size_vector_find, unsigned int size_vector
 				flag = 1;
 				break;
 			}
+
 		}
 
 		if (flag)break;
@@ -65,7 +66,7 @@ unsigned int  FindString(unsigned int size_vector_find, unsigned int size_vector
 		return itterator;
 	}
 	else {
-		return 0;
+		return 0xFFFFFFFF;// переполненная переменная не имеет смысла к контексте программы так чте ее возврат сообщает об ошибке
 	}
 }
 
@@ -75,11 +76,19 @@ int  FindNumber(unsigned int start_itterator,  vector<char>* raw_data) {//пои
 	short int k = 0;
 	bool flag = 0;
 	for (unsigned int i = start_itterator; i < start_itterator + 100; i++) {
-		if (47 < (int)(*raw_data)[i] && (int)(*raw_data)[i]  < 58) {
+		int symbol_number = (int)(*raw_data)[i];
+		if (47 < symbol_number && symbol_number < 59) {
 			flag = 1;
-			output_number *= 10*k ;
-			output_number += ((int)(*raw_data)[i]-48);
-			k++;
+			if (symbol_number != 58) {
+				if (k == 0 && symbol_number == 48) {}
+				else{				
+					output_number *= 10 ;	
+					output_number += (symbol_number - 48);
+					k++;
+				}
+
+			}
+			
 		}
 		else {
 			if (flag) break;
@@ -109,30 +118,34 @@ int  FindNumber(unsigned int start_itterator, char* raw_data) {//поиск чи
 
 int main(){
 	
-	int table_data = 0;
-	int data = 0;
-	int start_itterator = 0;
-	unsigned int itterator = 0;
+	int table_data = 0;//дата полученная из расписания
+	int data = 0;//дата сегодняшнего дня
+	int time_up = 0;// время первого занятия
+	int start_itterator = 0;//смещение начала вектора в поиске даты
+	unsigned int itterator = 0;//индекс найденой строки в векторе
 	string url;
 	char chars;
-	char find_string[] = R"(class="mpei-galaktika-lessons-grid-date")";
+	char find_string[] = R"(class="mpei-galaktika-lessons-grid-date")";// хорошо бы это в конфиги вытащить но с этим будем разбираться многопоже
 	vector<char> raw_data;
-
 	bool freeday = 0;
-	time_t now = time(0);
+
+	time_t now = time(0);//достаем время системы 
 	char* dt = ctime(&now);//достаем время системы 
-	for (int i = 0; i <= 2; i++) { //болк проверки пустого дня(нужно перенести в функцию со всеми вытекающими)
+
+//болк проверки пустого дня(нужно перенести в функцию со всеми вытекающими)
+	for (int i = 0; i <= 2; i++) { 
 		if ("Sat"[i] != dt[i]) freeday = 1;
 	}
 	if (!freeday) {
-		printf("on Saturday, no need to worry about studying on Sunday");
+		printf("ERROR on Saturday, no need to worry about studying on Sunday");
 		exit(0);
-	}//конец блока
+	}
+//конец блока
 
 	ifstream fd("destination_site.txt", ios::in);//открытие файла с сайтом парсинга
 	if (!fd.is_open()){
-		printf("ошибка открытия");
-		return 1;
+		printf("ERROR opening error");
+		exit(1);
 	}
 	else{
 		
@@ -159,20 +172,32 @@ int main(){
 		
 		itterator = FindString(size_vector_find, size_vector, 
 			find_string, &raw_data, start_itterator);
+		if (itterator == 0xFFFFFFFF) {//проверка на полное прохождение вектора(детальнее см функцию FindString)
+			printf("ERROR the schedule for tomorrow was not found");
+			exit(1);
+		}
+
 		table_data = FindNumber(itterator + size_vector_find, &raw_data);
-		if (table_data == data) break;
+		if (table_data == data) {
+			break;
+		}
 	}
 
-	
-	printf("%d \n",itterator);
+	time_up = FindNumber(itterator + size_vector_find + 20, &raw_data);// подготовка данных к выдаче в формате int 
+
+
+	//отладочные сообщения
+	printf("%u \n",itterator);
+	printf("%u \n", start_itterator-size_vector_find);
 	printf("%d \n", table_data);
 	printf("%d \n", data);
-	
+	printf("%d \n", time_up);
 
-	for (unsigned int i = 0; i < size_vector_find+50; i++) {
+	for (unsigned int i = 0; i < size_vector_find + 1000; i++) {
 		printf("%c", raw_data[itterator + i]);
 	}
 
 	scanf(&chars);
+	//конец отладочных сообщений 
 	return 0 ;
 }
