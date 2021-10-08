@@ -116,10 +116,19 @@ int  FindNumber(unsigned int start_itterator, char* raw_data) {//поиск чи
 	return output_number;
 }
 
+bool StringComparison(char* str, char* ref_str, int offset_str = 0, int offset_ref_str = 0) {
+	//сравнивает две строки str и ref_str, для каждой можно задать смещение поиска
+	for (int i = 0; i <= strlen(ref_str)-1; i++) {
+		if (ref_str[i + offset_ref_str] != str[i + offset_str]) return 0;	
+	}
+	return 1;
+}
+
 int main(){
 	
 	int table_data = 0;//дата полученная из расписания
 	int data = 0;//дата сегодняшнего дня
+	int date_restriction = 30;// ограничение месяца ниже будет обработчик
 	int time_up = 0;// время первого занятия
 	int start_itterator = 0;//смещение начала вектора в поиске даты
 	unsigned int itterator = 0;//индекс найденой строки в векторе
@@ -132,13 +141,11 @@ int main(){
 	time_t now = time(0);//достаем время системы 
 	char* dt = ctime(&now);//достаем время системы 
 
-//болк проверки пустого дня(нужно перенести в функцию со всеми вытекающими)
-	for (int i = 0; i <= 2; i++) { 
-		if ("Sat"[i] != dt[i]) freeday = 1;
-	}
-	if (!freeday) {
+//болк проверки пустого дня(есть простор для доработок)
+	
+	if (!StringComparison("Sat", dt)) {
 		printf("ERROR on Saturday, no need to worry about studying on Sunday");
-		exit(0);
+		exit(1);
 	}
 //конец блока
 
@@ -159,8 +166,24 @@ int main(){
 	unsigned int size_vector_find = size(find_string)-1;//уменьшение размера вектора связано с наличием команды конца сторки в строке эталон
 	unsigned int size_vector = raw_data.size() - size_vector_find;// особого смысла не имеет но в крайнем случае исключит ненужный поиск в конечных элементах
 	
+	//поправка на коллиество дней в месяце
 	data = FindNumber(0, dt);
-	data++;//100% вероятна ошибка переполнения даты месяца нужнен обработчик
+
+	if (StringComparison(dt, "Jan", 4))date_restriction = 31;
+	else if(StringComparison(dt, "Feb", 4))date_restriction = 28;//нужно думать как высокосный год выделять
+	else if (StringComparison(dt, "Mar", 4))date_restriction = 31;
+	else if (StringComparison(dt, "Apr", 4))date_restriction = 30;
+	else if (StringComparison(dt, "May", 4))date_restriction = 31;
+	else if (StringComparison(dt, "Jun", 4))date_restriction = 30;
+	else if (StringComparison(dt, "Jul", 4))date_restriction = 31;
+	else if (StringComparison(dt, "Aug", 4))date_restriction = 31;
+	else if (StringComparison(dt, "Sep", 4))date_restriction = 30;
+	else if (StringComparison(dt, "Oct", 4))date_restriction = 31;
+	else if (StringComparison(dt, "Nov", 4))date_restriction = 30;
+	else if (StringComparison(dt, "Dec", 4))date_restriction = 31;
+	
+	if (++data > date_restriction) data = 1;
+	//конец поправки
 	
 	for (int i = 0; i < 7;i++) {//цикл нахождения даты следующего дня в таблице расписания
 	// ограничение колличества иттераций выбрано исходя наихудшего случая 6 дневки
@@ -196,8 +219,10 @@ int main(){
 	for (unsigned int i = 0; i < size_vector_find + 1000; i++) {
 		printf("%c", raw_data[itterator + i]);
 	}
-
+	
+	vector<char>().swap(raw_data);
+	//raw_data.clear();// не работает
 	scanf(&chars);
 	//конец отладочных сообщений 
-	return 0 ;
+	return time_up;
 }
